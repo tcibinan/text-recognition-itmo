@@ -1,12 +1,13 @@
 import argparse
 import os
+import random
 
 from PIL import Image, ImageDraw, ImageFont
 from faker import Faker
 import requests
 
 
-def generate_test_data(width, height, padding, font_name, font_size, data_size, data_type):
+def generate_test_data(width, height, padding, random_padding, font_name, font_size, data_size, data_type):
     localization = 'ru_RU'
     data_folder = 'data'
     fonts_folder = 'fonts'
@@ -32,14 +33,31 @@ def generate_test_data(width, height, padding, font_name, font_size, data_size, 
 
     fake = Faker(localization)
 
+    cyrillic_symbols = 'АаБбВвГгДдЕеЁёЖжЗзИиЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЪъЫыЬьЭэЮюЯя' + ',.'
+
+    def generate_cyrillic_symbols():
+        i = 0
+        while True:
+            symbol = cyrillic_symbols[i]
+            i += 1
+            if i >= len(cyrillic_symbols):
+                i = 0
+            yield symbol
+
+    cyrillic_alphabet_generator = generate_cyrillic_symbols()
+
     for index in range(0, data_size):
         image_name = image_name_template % index
         image_path = os.path.join(data_folder, image_name)
         text_name = image_text_name_template % index
         text_path = os.path.join(data_folder, text_name)
+        actual_padding = padding + random.randint(0, random_padding)
         if data_type == 'word':
             text = fake.word()
-            actual_image_size = min(image_size[0], font_width * len(text)), image_size[1]
+            actual_image_size = min(image_size[0], font_width * len(text)) + 2 * actual_padding, image_size[1]
+        elif data_type == 'letter':
+            text = cyrillic_alphabet_generator.__next__()
+            actual_image_size = min(image_size[0], font_width * len(text)) + 2 * actual_padding, image_size[1]
         else:
             text = fake.text(max_nb_chars=line_length * text_height)
             actual_image_size = image_size
@@ -55,7 +73,7 @@ def generate_test_data(width, height, padding, font_name, font_size, data_size, 
             else:
                 next_text_index = text_index + line_length
             line_text = text[text_index:next_text_index].replace('\n', '')
-            text_position = ((padding), padding + line_index * font_height)
+            text_position = ((actual_padding), padding + line_index * font_height)
             draw.text(text_position, line_text, fill=text_color, font=font)
             text_index = next_text_index
             line_index += 1
@@ -70,14 +88,16 @@ def main():
     parser.add_argument('--width', type=int, default=300, help='Image width')
     parser.add_argument('--height', type=int, default=400, help='Image height')
     parser.add_argument('--padding', type=int, default=10, help='Image padding')
+    parser.add_argument('--random-padding', type=int, default=5, help='Image max random padding')
     parser.add_argument('--font-name', type=str, default='RobotoMono-Regular.ttf', help='Font file name')
     parser.add_argument('--font-size', type=int, default=15, help='Font size')
     parser.add_argument('--data-size', type=int, default=10, help='Number of images to generate')
     parser.add_argument('--data-type', type=str, default='text', help='Type of data to generate. '
-                                                                      'Either text or word.')
+                                                                      'Either text or word or letter.')
     args = parser.parse_args()
-    generate_test_data(width=args.width, height=args.height, padding=args.padding, font_name=args.font_name,
-                       font_size=args.font_size, data_size=args.data_size, data_type=args.data_type)
+    generate_test_data(width=args.width, height=args.height, padding=args.padding, random_padding=args.random_padding,
+                       font_name=args.font_name, font_size=args.font_size, data_size=args.data_size,
+                       data_type=args.data_type)
 
 
 if __name__ == '__main__':
