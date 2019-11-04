@@ -1,0 +1,1 @@
+python scripts/train/train_letters_recognition.py
