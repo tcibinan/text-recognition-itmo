@@ -6,6 +6,8 @@ from PIL import Image, ImageDraw, ImageFont
 from faker import Faker
 import requests
 
+from scripts.common.utils import get_alphabet
+
 
 def generate_test_data(width, height, padding, random_padding, font_name, font_size, data_size, data_type):
     localization = 'ru_RU'
@@ -33,14 +35,14 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
 
     fake = Faker(localization)
 
-    cyrillic_symbols = 'АаБбВвГгДдЕеЁёЖжЗзИиЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЪъЫыЬьЭэЮюЯя' + ',.'
+    alphabet = get_alphabet()
 
     def generate_cyrillic_symbols():
         i = 0
         while True:
-            symbol = cyrillic_symbols[i]
+            symbol = alphabet[i]
             i += 1
-            if i >= len(cyrillic_symbols):
+            if i >= len(alphabet):
                 i = 0
             yield symbol
 
