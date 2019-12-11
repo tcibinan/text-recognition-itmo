@@ -9,7 +9,7 @@ import requests
 from scripts.common.utils import get_alphabet
 
 
-def generate_test_data(width, height, padding, random_padding, font_name, font_size, data_size, data_type):
+def generate_test_data(width, height, padding, random_padding, font_name, font_size, data_size, data_type, data_metric):
     localization = 'ru_RU'
     data_folder = 'data'
     fonts_folder = 'fonts'
@@ -37,7 +37,7 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
 
     alphabet = get_alphabet()
 
-    def generate_cyrillic_symbols():
+    def generate_alphabet_symbols():
         i = 0
         while True:
             symbol = alphabet[i]
@@ -46,7 +46,7 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
                 i = 0
             yield symbol
 
-    cyrillic_alphabet_generator = generate_cyrillic_symbols()
+    alphabet_generator = generate_alphabet_symbols()
 
     for index in range(0, data_size):
         image_name = image_name_template % index
@@ -58,7 +58,7 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
             text = fake.word()
             actual_image_size = min(image_size[0], font_width * len(text)) + 2 * actual_padding, image_size[1]
         elif data_type == 'letter':
-            text = cyrillic_alphabet_generator.__next__()
+            text = alphabet_generator.__next__()
             actual_image_size = min(image_size[0], font_width * len(text)) + 2 * actual_padding, image_size[1]
         else:
             text = fake.text(max_nb_chars=line_length * text_height)
@@ -68,6 +68,7 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
 
         text_index = 0
         line_index = 0
+        text_position = (0, 0)
         while line_index < text_height:
             next_line_breaker = text.find('\n', text_index + 1)
             if next_line_breaker > 0:
@@ -75,14 +76,26 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
             else:
                 next_text_index = text_index + line_length
             line_text = text[text_index:next_text_index].replace('\n', '')
-            text_position = ((actual_padding), padding + line_index * font_height)
+            text_position = (actual_padding, padding + line_index * font_height)
             draw.text(text_position, line_text, fill=text_color, font=font)
             text_index = next_text_index
             line_index += 1
 
         img.save(image_path)
         with open(text_path, 'w') as f:
-            f.write(text[:text_index])
+            actual_text = text[:text_index]
+            if data_metric == 'text':
+                f.write(actual_text)
+            else:
+                measurements = []
+                element_left_top = text_position
+                element_right_bottom = (element_left_top[0] + font_width, element_left_top[1] + font_height)
+                for _ in range(len(actual_text)):
+                    measurements.append([element_left_top[0], element_left_top[1],
+                                         element_right_bottom[0], element_right_bottom[1]])
+                    element_left_top = (element_left_top[0] + font_width, element_left_top[1])
+                    element_right_bottom = (element_right_bottom[0] + font_width, element_right_bottom[1])
+                f.write(str(measurements))
 
 
 def main():
@@ -96,10 +109,12 @@ def main():
     parser.add_argument('--data-size', type=int, default=10, help='Number of images to generate')
     parser.add_argument('--data-type', type=str, default='text', help='Type of data to generate. '
                                                                       'Either text or word or letter.')
+    parser.add_argument('--data-metric', type=str, default='text', help='Metric of data to measure. '
+                                                                        'Either text or measurements_number.')
     args = parser.parse_args()
     generate_test_data(width=args.width, height=args.height, padding=args.padding, random_padding=args.random_padding,
                        font_name=args.font_name, font_size=args.font_size, data_size=args.data_size,
-                       data_type=args.data_type)
+                       data_type=args.data_type, data_metric=args.data_metric)
 
 
 if __name__ == '__main__':
