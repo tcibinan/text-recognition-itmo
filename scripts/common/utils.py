@@ -3,7 +3,7 @@ allowed_symbols_file = 'presets/alphabet.txt'
 
 def read_file_content(path):
     with open(path, 'r') as file:
-        return file.read().strip()
+        return file.read().strip() or ' '
 
 
 def get_alphabet():

@@ -53,13 +53,19 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
         image_path = os.path.join(data_folder, image_name)
         text_name = image_text_name_template % index
         text_path = os.path.join(data_folder, text_name)
-        actual_padding = padding + random.randint(0, random_padding)
+        import numpy as np
+        actual_padding = padding + np.sign(random_padding) * random.randint(0, np.abs(random_padding))
         if data_type == 'word':
             text = fake.word()
             actual_image_size = min(image_size[0], font_width * len(text)) + 2 * actual_padding, image_size[1]
         elif data_type == 'letter':
             text = alphabet_generator.__next__()
-            actual_image_size = min(image_size[0], font_width * len(text)) + 2 * actual_padding, image_size[1]
+            text = text if random.random() >= 0.5 else text.upper()
+            if text.islower():
+                actual_font_height = int(font_height * (random.random() * 0.3 + 0.7))
+            else:
+                actual_font_height = font_height
+            actual_image_size = min(image_size[0], font_width * len(text)) + 2 * actual_padding,  min(image_size[1], actual_font_height + actual_padding)
         else:
             text = fake.text(max_nb_chars=line_length * text_height)
             actual_image_size = image_size
@@ -76,7 +82,11 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
             else:
                 next_text_index = text_index + line_length
             line_text = text[text_index:next_text_index].replace('\n', '')
-            text_position = (actual_padding, padding + line_index * font_height)
+            if data_type == 'letter':
+                text_position = (actual_padding, actual_padding + line_index * font_height - (font_height - actual_font_height))
+            #     text_position = (actual_padding, actual_padding + line_index * font_height - font_height * (random.random() * 0.3))
+            else:
+                text_position = (actual_padding, actual_padding + line_index * font_height)
             draw.text(text_position, line_text, fill=text_color, font=font)
             text_index = next_text_index
             line_index += 1
