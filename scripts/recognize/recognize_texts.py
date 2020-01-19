@@ -2,12 +2,10 @@ import os
 
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw
-from keras.layers import Dense, Activation, Dropout
-from keras.models import Sequential
 
 from scripts.common.parsers import parse_letters
 from scripts.common.utils import read_file_content, get_alphabet, crop_image
+from scripts.neural_network.NeuralNetwork import NeuralNetwork
 
 alphabet = get_alphabet()
 
@@ -22,9 +20,7 @@ def from_category_to_symbol(category):
 
 def main():
     n_classes = len(alphabet)
-    data_directory = 'data'
-    weights_directory = 'weights'
-    weights_file = os.path.join(weights_directory, 'letters-recognition.h5')
+    data_directory = 'data/test_data'
     unified_image_size = (10, 10)
     test_data_ids = sorted(map(lambda it: int(it.replace('image_', '').replace('.png', '')),
                                filter(lambda it: it.startswith('image'),
@@ -43,18 +39,6 @@ def main():
 
     testing_index = 0
     current_X = X[testing_index]
-
-    model = Sequential()
-    model.add(Dense(512, input_shape=(input_dim,)))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(512))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(n_classes))
-    model.add(Activation('softmax'))
-    model.compile(loss='categorical_crossentropy', metrics=['accuracy'], optimizer='adam')
-    model.load_weights(weights_file)
 
     predicted_letters = []
     letter_dimensions = [dim for dim in parse_letters(1 - current_X)]
@@ -88,8 +72,8 @@ def main():
         # draw = ImageDraw.Draw(img)
         # img.show()
         # draw.rectangle(list(letter_dimension), outline=(0, 0, 0), width=1)
-
-        predicted_letter = from_category_to_symbol([np.argmax(model.predict(np.array([input_img])))])
+        neural_network = NeuralNetwork(n_classes, 10 * 10)
+        predicted_letter = from_category_to_symbol(neural_network.recognize(np.array([input_img])))
         predicted_letters.append(predicted_letter)
     predicted_text = ''.join(predicted_letters)
     print(predicted_text)

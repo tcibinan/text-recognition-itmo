@@ -9,9 +9,8 @@ import requests
 from scripts.common.utils import get_alphabet
 
 
-def generate_test_data(width, height, padding, random_padding, font_name, font_size, data_size, data_type, data_metric):
+def generate_test_data(data_folder, width, height, padding, random_padding, font_name, font_size, data_size, data_type, data_metric):
     localization = 'ru_RU'
-    data_folder = 'data'
     fonts_folder = 'fonts'
     default_font_url = 'https://github.com/google/fonts/raw/8143a3e2d9f7656bc7e551f96d6294d47882d907/apache/' \
                        'robotomono/RobotoMono-Regular.ttf'
@@ -111,6 +110,7 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
 
 def main():
     parser = argparse.ArgumentParser(description='Generate images with random text')
+    parser.add_argument('--folder', type=str, default="data", help='Data folder')
     parser.add_argument('--width', type=int, default=300, help='Image width')
     parser.add_argument('--height', type=int, default=400, help='Image height')
     parser.add_argument('--padding', type=int, default=10, help='Image padding')
@@ -123,7 +123,7 @@ def main():
     parser.add_argument('--data-metric', type=str, default='text', help='Metric of data to measure. '
                                                                         'Either text or measurements_number.')
     args = parser.parse_args()
-    generate_test_data(width=args.width, height=args.height, padding=args.padding, random_padding=args.random_padding,
+    generate_test_data(data_folder=args.folder, width=args.width, height=args.height, padding=args.padding, random_padding=args.random_padding,
                        font_name=args.font_name, font_size=args.font_size, data_size=args.data_size,
                        data_type=args.data_type, data_metric=args.data_metric)
 
