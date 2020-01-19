@@ -1,12 +1,13 @@
 import os
 
+from PIL import Image
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
 from keras.utils import np_utils
 import numpy as np
 import cv2
 
-from scripts.common.utils import read_file_content, get_alphabet
+from scripts.common.utils import read_file_content, get_alphabet, crop_image
 
 alphabet = get_alphabet()
 
@@ -31,13 +32,20 @@ def main():
     X = []
     Y = []
     for i in test_data_ids:
-        img = cv2.imread(os.path.join(data_directory, 'image_%s.png' % i), cv2.IMREAD_GRAYSCALE)
+        # if i < 20:
+        img = crop_image(cv2.imread(os.path.join(data_directory, 'image_%s.png' % i), cv2.IMREAD_GRAYSCALE))
+        # else:
+        #     img = cv2.imread(os.path.join(data_directory, 'image_%s.png' % i), cv2.IMREAD_GRAYSCALE)
         resized_img = cv2.resize(img, dsize=unified_image_size, interpolation=cv2.INTER_CUBIC)
         X.append(np.asarray(resized_img, dtype='uint8').reshape(-1))
         # # resized_img = cv2.resize(img, dsize=unified_image_size, interpolation=cv2.INTER_CUBIC)
         # resized_img = img
         # # X.append(np.asarray(resized_img, dtype='uint8').reshape(-1))
         # X.append(np.asarray(resized_img, dtype='uint8'))
+        # if i < 20:
+        #     if True:
+            # img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_GRAY2RGB), 'RGB')
+            # img.save('training/image_%s.png' % i)
         Y.append(from_symbol_to_category(read_file_content(os.path.join(data_directory, 'text_%s.txt' % i))[0]))
     X = np.array(X)
     X = X / 255
@@ -71,7 +79,8 @@ def main():
     if os.path.exists(weights_file):
         model.load_weights(weights_file)
     else:
-        model.fit(X, Y, epochs=100, verbose=2, batch_size=32, validation_split=0.3)
+        model.fit(X, Y, epochs=30, verbose=2, batch_size=32, validation_split=0.3)
+        # model.fit(X, Y, epochs=100, verbose=2, batch_size=32, validation_split=0.3)
         model.save_weights(weights_file)
     # X_test = np.array([X[324]])
     # Y_test = Y[324]

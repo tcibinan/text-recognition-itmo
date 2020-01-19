@@ -30,8 +30,12 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
 
     font = ImageFont.truetype(font_file, size=font_size)
     font_width, font_height = font.getsize('H')
+    if data_type == 'text':
+        font_height = font_height * 1.5
     line_length = int((image_size[0] - 2 * padding) / font_width)
     text_height = int((image_size[1] - 2 * padding) / font_height)
+    if data_type == 'letter':
+        font_height = font_height * 1.5
 
     fake = Faker(localization)
 
@@ -60,17 +64,15 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
             actual_image_size = min(image_size[0], font_width * len(text)) + 2 * actual_padding, image_size[1]
         elif data_type == 'letter':
             text = alphabet_generator.__next__()
-            text = text if random.random() >= 0.5 else text.upper()
-            if text.islower():
-                actual_font_height = int(font_height * (random.random() * 0.3 + 0.7))
-            else:
-                actual_font_height = font_height
+            actual_font_height = font_height
             actual_image_size = min(image_size[0], font_width * len(text)) + 2 * actual_padding,  min(image_size[1], actual_font_height + actual_padding)
         else:
             text = fake.text(max_nb_chars=line_length * text_height)
             actual_image_size = image_size
         img = Image.new('RGB', actual_image_size, color=background_color)
         draw = ImageDraw.Draw(img)
+
+        text = text.lower()
 
         text_index = 0
         line_index = 0
@@ -84,7 +86,6 @@ def generate_test_data(width, height, padding, random_padding, font_name, font_s
             line_text = text[text_index:next_text_index].replace('\n', '')
             if data_type == 'letter':
                 text_position = (actual_padding, actual_padding + line_index * font_height - (font_height - actual_font_height))
-            #     text_position = (actual_padding, actual_padding + line_index * font_height - font_height * (random.random() * 0.3))
             else:
                 text_position = (actual_padding, actual_padding + line_index * font_height)
             draw.text(text_position, line_text, fill=text_color, font=font)

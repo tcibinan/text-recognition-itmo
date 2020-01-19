@@ -7,7 +7,7 @@ from keras.layers import Dense, Activation, Dropout
 from keras.models import Sequential
 
 from scripts.common.parsers import parse_letters
-from scripts.common.utils import read_file_content, get_alphabet
+from scripts.common.utils import read_file_content, get_alphabet, crop_image
 
 alphabet = get_alphabet()
 
@@ -44,10 +44,6 @@ def main():
     testing_index = 0
     current_X = X[testing_index]
 
-    # for letter_dimension in letter_dimensions[50:51]:
-    #     img = Image.fromarray(cv2.imread(os.path.join(data_directory, 'image_%s.png' % testing_index))[letter_dimension[1]:letter_dimension[3], letter_dimension[0]:letter_dimension[2]], 'RGB')
-    #     img.show()
-
     model = Sequential()
     model.add(Dense(512, input_shape=(input_dim,)))
     model.add(Activation('relu'))
@@ -62,20 +58,30 @@ def main():
 
     predicted_letters = []
     letter_dimensions = [dim for dim in parse_letters(1 - current_X)]
+
+    # for letter_dimension in letter_dimensions[3:4]:
+    #     letter_img = cv2.imread(os.path.join(data_directory, 'image_%s.png' % testing_index))[
+    #                  letter_dimension[1]:letter_dimension[3], letter_dimension[0]:letter_dimension[2]]
+    #     letter_img = cv2.resize(letter_img, dsize=(50, 50), interpolation=cv2.INTER_CUBIC)
+    #     img = Image.fromarray(letter_img, 'RGB')
+    #     img.show()
+
     i = 0
     for letter_dimension in letter_dimensions:
         i += 1
-        letter_img = cv2.imread(os.path.join(data_directory, 'image_%s.png' % testing_index), cv2.IMREAD_GRAYSCALE) \
-                     [letter_dimension[1]:letter_dimension[3], letter_dimension[0]:letter_dimension[2]]
+        letter_img = crop_image(cv2.imread(os.path.join(data_directory, 'image_%s.png' % testing_index), cv2.IMREAD_GRAYSCALE) \
+                     [letter_dimension[1]:letter_dimension[3], letter_dimension[0]:letter_dimension[2]])
         # letter_img = current_X[letter_dimension[1]:letter_dimension[3], letter_dimension[0]:letter_dimension[2]]
         # letter_img = current_X[letter_dimension[0]:letter_dimension[2], letter_dimension[1]:letter_dimension[3]]
         # [letter_dimension[0]: letter_dimension[2], letter_dimension[1]: letter_dimension[3]]
+        if not letter_img.shape[0] or not letter_img.shape[1]:
+            continue
         resized_letter_img = cv2.resize(letter_img, dsize=unified_image_size, interpolation=cv2.INTER_CUBIC)
         input_img = np.asarray(resized_letter_img, dtype='uint8').reshape(-1)
 
         # if i < 20:
         # if True:
-        #     img = Image.fromarray(cv2.cvtColor(letter_img, cv2.COLOR_GRAY2RGB), 'RGB')
+        #     img = Image.fromarray(cv2.cvtColor(resized_letter_img, cv2.COLOR_GRAY2RGB), 'RGB')
         #     img.save('detected/image_%s.png' % i)
         # img = Image.fromarray(cv2.cvtColor(resized_letter_img, cv2.COLOR_GRAY2RGB), 'RGB')
         # img.save('detected/image_%s.png' % i)

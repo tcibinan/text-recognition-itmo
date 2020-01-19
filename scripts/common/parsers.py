@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def parse_letters(X, horizontal_multiplier=0.03, vertical_multiplier=0.03, grain=5):
+def parse_letters(X, horizontal_multiplier=0, vertical_multiplier=0.03, grain=5):
     y = X.shape[1]
     for line_dimension in parse_lines(X, horizontal_multiplier=horizontal_multiplier, grain=5):
         letter_start = 0
