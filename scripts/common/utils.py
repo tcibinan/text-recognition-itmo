@@ -12,6 +12,18 @@ def get_alphabet():
     return read_file_content(allowed_symbols_file)
 
 
+def tanh(x):
+    return np.tanh(x)
+
+
+def softmax(x):
+    return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
+
+
+def tanh2deriv(output):
+    return 1 - output**2
+
+
 def crop_image(X, horizontal_multiplier=0, vertical_multiplier=0):
     orig = X
     X = 1 - X / 255
@@ -23,7 +35,6 @@ def crop_image(X, horizontal_multiplier=0, vertical_multiplier=0):
     column_end = y
     for i in np.arange(x):
         horizontal = X[i, :]
-        # print(horizontal)
         if np.sum(horizontal) > y * horizontal_multiplier:
             line_start = i
             break

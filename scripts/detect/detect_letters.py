@@ -9,10 +9,8 @@ from scripts.common.utils import read_file_content
 
 
 def main():
-    data_directory = 'data'
-    # unified_image_size = (20, 20)
+    data_directory = 'data/test'
     unified_image_size = (300, 400)
-    # unified_image_size = (150, 100)
     test_data_ids = sorted(map(lambda it: int(it.replace('image_', '').replace('.png', '')),
                                filter(lambda it: it.startswith('image'),
                                       os.listdir(data_directory))))
@@ -26,21 +24,21 @@ def main():
     X = np.array(X)
     X = 1 - X / 255
     Y = np.array(Y)
-    input_dim = unified_image_size[0] * unified_image_size[1]
 
-    testing_index = 0
-    current_X = X[testing_index]
-    letter_dimensions = parse_letters(current_X)
+    for testing_index, current_X in enumerate(X):
+        letter_dimensions = parse_letters(current_X)
 
-    img = Image.fromarray(cv2.imread(os.path.join(data_directory, 'image_%s.png' % testing_index)), 'RGB')
-    draw = ImageDraw.Draw(img)
-    recognized_letters = 0
-    for letter_dimension in letter_dimensions:
-        recognized_letters += 1
-        draw.rectangle(list(letter_dimension), outline=(0, 0, 0), width=1)
-    print('Actual letters:     %s' % len(Y[testing_index]))
-    print('Recognized letters: %s' % recognized_letters)
-    img.show()
+        image_path = os.path.join(data_directory, 'image_%s.png' % testing_index)
+        img = Image.fromarray(cv2.imread(image_path), 'RGB')
+        draw = ImageDraw.Draw(img)
+        recognized_letters = 0
+        for letter_dimension in letter_dimensions:
+            recognized_letters += 1
+            draw.rectangle(list(letter_dimension), outline=(0, 0, 0), width=1)
+        print('> ' + image_path)
+        print('Actual: %s letters' % len(Y[testing_index]))
+        print('Detect: %s letters' % recognized_letters)
+        img.show()
 
 
 if __name__ == '__main__':
